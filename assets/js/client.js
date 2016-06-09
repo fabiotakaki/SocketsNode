@@ -100,6 +100,8 @@ socket.on('1000 TBL-LIST-OK', function(rows){
 // Se sucesso, adiciono eles no content
 socket.on('453 ORD-CONSULT-OK', function(rows){
   var html = '';
+  var orders_select = '';
+  var tables_select = '';
 
   html += '<div class="col-lg-12">\
               <h1>Listagem de Pedidos da Mesa '+rows[0]+'</h1>\
@@ -127,12 +129,35 @@ socket.on('453 ORD-CONSULT-OK', function(rows){
               </div>\
               </td>\
             </tr>';
+    orders_select += '<option value="'+rows[1][i].idOrder+'">Pedido '+rows[1][i].idOrder+'</option>';
   }
   html += '</tbody></table>';
 
+  html += '<h4>Transferir Pedido</h4>';
+  html += '<label>Pedido</label><br><select id="orders-select"></select><br>';
+  html += '<label>Para Mesa</label><br><select id="tables-select"></select><br><br>';
+  html += '<button class="btn btn-success" id="transfer-order">Transferir</button>';
+
   $('#content').html(html);
 
+  $('#orders-select').html(orders_select);
+
   socket.emit('1100 PRO-LIST');
+  socket.emit('1300 TBL-LIST-SELECT');
+});
+
+//------------------------------//
+//-- Listagem de Mesas SELECT --//
+//------------------------------//
+// Se sucesso, adiciono eles no select
+socket.on('1350 TBL-LIST-SELECT-OK', function(rows){
+  var html = '';
+
+  for (var i = 0; i < rows.length; i++) {
+    html += '<option value="'+rows[i].idTable+'">Mesa '+rows[i].idTable+'</option>';
+  }
+  $('#tables-select').html(html);
+
 });
 
 //------------------------------//
@@ -146,6 +171,44 @@ socket.on('1150 PRO-LIST-OK', function(rows){
     html += '<option value="'+rows[i].idProduct+'">'+rows[i].name+' - R$'+rows[i].price+'</option>';
   }
   $('#products-select').html(html);
+
+});
+
+//------------------------------//
+//----- Visualiza Pedido -------//
+//------------------------------//
+socket.on('650 ORD-SHOW-OK', function(data){
+  console.log(data);
+  var html = '';
+
+  $('#viz-modal-title').html('Produtos');
+
+  html += '<table class="table table-hover">\
+          <thead>\
+            <tr>\
+              <th>Número do Pedido</th>\
+              <th>Produto</th>\
+              <th>Preço</th>\
+            </tr>\
+          </thead>\
+          <tbody>';
+  for (var i = 0; i < data[0].length; i++) {
+    html += '<tr>\
+              <th scope="row">'+data[0][i].idOrder+'</th>\
+              <td>'+data[0][i].name+'</td>\
+              <td>R$ '+data[0][i].price+'</td>\
+            </tr>';
+  }
+  html += '<tr>\
+            <th scope="row">Total</th>\
+            <td></td>\
+            <th>R$ '+data[1][0].total+'</th>\
+          </tr>';
+  html += '</tbody></table>';
+
+  $('#viz-modal-body').html(html);
+
+  $('#viz-modal').modal();
 
 });
 
@@ -200,42 +263,20 @@ $(document).off('click', '#viz-order').on('click', '#viz-order', function (e) {
   e.preventDefault();
 });
 
-//------------------------------//
-//----- Visualiza Pedido -------//
-//------------------------------//
-socket.on('650 ORD-SHOW-OK', function(data){
-  console.log(data);
-  var html = '';
-
-  $('#viz-modal-title').html('Produtos');
-
-  html += '<table class="table table-hover">\
-          <thead>\
-            <tr>\
-              <th>Número do Pedido</th>\
-              <th>Produto</th>\
-              <th>Preço</th>\
-            </tr>\
-          </thead>\
-          <tbody>';
-  for (var i = 0; i < data[0].length; i++) {
-    html += '<tr>\
-              <th scope="row">'+data[0][i].idOrder+'</th>\
-              <td>'+data[0][i].name+'</td>\
-              <td>R$ '+data[0][i].price+'</td>\
-            </tr>';
+// transfere pedido
+$(document).off('click', '#transfer-order').on('click', '#transfer-order', function (e) {
+  var data = [];
+  var table = $('#tables-select').val();
+  var order = $('#orders-select').val();
+  var old_table = idTable;
+  var c = confirm('Tem certeza que deseja transferir o pedido '+ order +' para a mesa '+ table +'?');
+  if (c == true) {
+    data.push(table);
+    data.push(order);
+    data.push(old_table);
+    socket.emit('500 ORD-TRANSFER', data);
   }
-  html += '<tr>\
-            <th scope="row">Total</th>\
-            <td></td>\
-            <th>R$ '+data[1][0].total+'</th>\
-          </tr>';
-  html += '</tbody></table>';
-
-  $('#viz-modal-body').html(html);
-
-  $('#viz-modal').modal();
-
+  e.preventDefault();
 });
 
 // imprimir pedido
