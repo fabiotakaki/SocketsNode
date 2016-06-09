@@ -108,6 +108,10 @@ io.on('connection', function(socket){
 //--------------------------------//
 //----------- FUNÇÕES ------------//
 //--------------------------------//
+
+//--------------------------------//
+//---- Verifica Status da Mesa ---//
+//--------------------------------//
 function verifyStatus(table){
   // Se a quantidade de pedidos for 0, eu fecho a mesa
   con.query('SELECT COUNT(*) AS count FROM orders WHERE idTable = '+table,function(err,result3){
@@ -363,6 +367,86 @@ function verifyStatus(table){
         socket.emit('650 ORD-SHOW-OK', data);
       }); // fimm da busca do total
     });
+  });
+
+
+  //------------------------------//
+  //----- Visualiza Editar -------//
+  //------------------------------//
+  socket.on('800 ORD-EDIT-SHOW', function(idOrder){
+    var data = [];
+    var query;
+    query = 'SELECT o.*, op.`idProduct` FROM `orders` AS o ';
+    query += 'INNER JOIN `orders_products` AS op ON o.`idOrder` = op.`idOrder` ';
+    query += 'WHERE o.idOrder ='+idOrder;
+    // Mando a listagem de mesas para a página
+    con.query(query ,function(err,row){
+      // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+      if(err){
+        console.log('851 ORD-EDIT-SHOW-NOT');
+        socket.emit('851 ORD-EDIT-SHOW-NOT');
+        return;
+      }
+
+      data.push(row);
+
+      // Mando a listagem de produtos para a página
+      con.query('SELECT * FROM products',function(err,products){
+
+        // Se caso der erro, envio um 851 ORD-EDIT-SHOW-NOT
+        if(err){
+          console.log('851 ORD-EDIT-SHOW-NOT');
+          socket.emit('851 ORD-EDIT-SHOW-NOT');
+        }
+        data.push(products);
+
+        console.log('850 ORD-EDIT-SHOW-OK');
+        socket.emit('850 ORD-EDIT-SHOW-OK', data);
+      });
+
+    });
+  });
+
+  //------------------------------//
+  //----- Visualiza Editar -------//
+  //------------------------------//
+  socket.on('801 ORD-EDIT', function(data){
+    
+    var idOrder = data[0];
+    var orders_products = data[1];
+
+    // deleto todos os produtos do pedido para adicionar os novos
+    con.query(
+      'DELETE FROM orders_products WHERE idOrder = ?',
+      [idOrder],
+      function (err, result2) {
+        if (err){
+          console.log('851 ORD-EDIT-NOT');
+          socket.emit('851 ORD-EDIT-NOT');
+        }else{
+
+          // Adiciono os novos produtos no pedido
+          for(var i=0; i<orders_products.length; i++){
+            console.log('1200 ORD-PRODUCT');
+            var order_product = { idProduct: orders_products[i], idOrder: idOrder };
+            con.query('INSERT INTO orders_products SET ?', order_product, function(err,res2){
+
+              if(err){
+                console.log('1251 ORD-PRODUCT-NOT');
+                socket.emit('1251 ORD-PRODUCT-NOT');
+              }else{
+                console.log('1250 ORD-PRODUCT-OK');
+              }
+            });
+          }
+
+          console.log('850 ORD-EDIT-OK');
+          socket.emit('850 ORD-EDIT-OK');
+
+        }
+      }
+    );
+
   });
 
   //------------------------------//

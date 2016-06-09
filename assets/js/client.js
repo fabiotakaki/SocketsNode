@@ -124,7 +124,7 @@ socket.on('453 ORD-CONSULT-OK', function(rows){
               <td>\
               <div class="btn-group" role="group">\
                 <button class="btn btn-primary" id="viz-order" idOrder="'+rows[1][i].idOrder+'">Visualizar</button> \
-                <button class="btn btn-warning">Editar</button> \
+                <button class="btn btn-warning" id="edit-order" idOrder="'+rows[1][i].idOrder+'">Editar</button> \
                 <button class="btn btn-danger" idOrder="'+rows[1][i].idOrder+'" id="delOrder">Deletar</button>\
               </div>\
               </td>\
@@ -178,7 +178,6 @@ socket.on('1150 PRO-LIST-OK', function(rows){
 //----- Visualiza Pedido -------//
 //------------------------------//
 socket.on('650 ORD-SHOW-OK', function(data){
-  console.log(data);
   var html = '';
 
   $('#viz-modal-title').html('Produtos');
@@ -210,6 +209,51 @@ socket.on('650 ORD-SHOW-OK', function(data){
 
   $('#viz-modal').modal();
 
+});
+
+//------------------------------//
+//-- Visualiza editar Pedido ---//
+//------------------------------//
+socket.on('850 ORD-EDIT-SHOW-OK', function(data){
+  var html = '';
+  var order = data[0][0];
+  var products = data[1];
+
+  $('#edit-modal-title').html('Editar Pedido');
+
+  console.log(data);
+
+  html += 'Número do pedido: <b id="idOrderEdit">'+order.idOrder+'</b>';
+  html += '<p><label><b>Produtos</b></label><br><select id="products-select-edit" multiple></select></p>';
+
+  $('#edit-modal-body').html(html);
+
+  var products_select_edit = '';
+
+  for (var i = 0; i < products.length; i++) {
+    products_select_edit += '<option value="'+products[i].idProduct+'">'+products[i].name+' - R$'+products[i].price+'</option>';
+  }
+
+  $('#products-select-edit').html(products_select_edit);
+
+  for(var i=0; i<data[0].length; i++){
+    $('#products-select-edit option').each(function(index){
+      if(data[0][i].idProduct == $(this).val()){
+        $(this).attr('selected', true);
+      }
+    });
+  }
+
+  $('#edit-modal').modal();
+
+});
+
+//------------------------------//
+//-- Visualiza editar Pedido ---//
+//------------------------------//
+socket.on('850 ORD-EDIT-OK', function(data){
+  $('#edit-modal').modal('hide');
+  alert('Pedido atualizado com sucesso');
 });
 
 //------------------------------//
@@ -260,6 +304,25 @@ $(document).off('click', '#delOrder').on('click', '#delOrder', function (e) {
 // visualizar pedido
 $(document).off('click', '#viz-order').on('click', '#viz-order', function (e) {
   socket.emit('600 ORD-SHOW', $(this).attr('idOrder'));
+  e.preventDefault();
+});
+
+// editar pedido
+$(document).off('click', '#edit-order').on('click', '#edit-order', function (e) {
+  socket.emit('800 ORD-EDIT-SHOW', $(this).attr('idOrder'));
+  e.preventDefault();
+});
+
+// editar pedido modal
+$(document).off('click', '#edit-modal-submit').on('click', '#edit-modal-submit', function (e) {
+  var data = [];
+  var products = [];
+  data.push($('#idOrderEdit').text());
+  $('#products-select-edit :selected').each(function(i, selected){ 
+    products[i] = $(selected).val();
+  });
+  data.push(products);
+  socket.emit('801 ORD-EDIT', data);
   e.preventDefault();
 });
 
