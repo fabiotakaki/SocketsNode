@@ -103,24 +103,42 @@ socket.on('453 ORD-CONSULT-OK', function(rows){
   var orders_select = '';
   var tables_select = '';
 
+  console.log(rows);
+
   html += '<div class="col-lg-12">\
               <h1>Listagem de Pedidos da Mesa '+rows[0]+'</h1>\
               <p><button id="listTables" idTable="'+rows[0]+'" class="btn btn-primary">Listagem de Mesas</button></p>\
               <p><label><b>Produtos</b></label><br><select id="products-select" multiple></select></p>\
               <button id="addOrder" class="btn btn-primary">Adicionar Pedido</button>\
-              <button class="btn btn-danger" id="close" idTable="'+rows[0]+'">Fechar Conta</button>\
           </div>';
   html += '<table class="table table-hover">\
           <thead>\
             <tr>\
               <th>Número do Pedido</th>\
+              <th>Produtos</th>\
+              <th>Preço</th>\
               <th>Ações</th>\
             </tr>\
           </thead>\
           <tbody>';
+
+  var total = 0.0;
   for (var i = 0; i < rows[1].length; i++) {
+    var products = '';
+    var totalOrder = 0.0;
+    for(var j=0; j< rows[2].length; j++){
+      if(rows[2][j].idOrder == rows[1][i].idOrder){
+        products += rows[2][j].name+', ';
+        totalOrder += rows[2][j].price;
+      }
+    }
+
+    total += totalOrder;
+
     html += '<tr>\
               <th scope="row">'+rows[1][i].idOrder+'</th>\
+              <td>'+products+'</td>\
+              <td>R$ '+totalOrder.toFixed(2)+'</td>\
               <td>\
               <div class="btn-group" role="group">\
                 <button class="btn btn-primary" id="viz-order" idOrder="'+rows[1][i].idOrder+'">Visualizar</button> \
@@ -131,6 +149,8 @@ socket.on('453 ORD-CONSULT-OK', function(rows){
             </tr>';
     orders_select += '<option value="'+rows[1][i].idOrder+'">Pedido '+rows[1][i].idOrder+'</option>';
   }
+  html += '<tr><th>Total</th><td></td><th>R$ '+total.toFixed(2)+'</th><td><button class="btn btn-danger" id="close" idTable="'+rows[0]+'">Fechar Conta</button></td>';
+
   html += '</tbody></table>';
 
   html += '<h4>Transferir Pedido</h4>';
@@ -168,7 +188,7 @@ socket.on('1150 PRO-LIST-OK', function(rows){
   var html = '';
 
   for (var i = 0; i < rows.length; i++) {
-    html += '<option value="'+rows[i].idProduct+'">'+rows[i].name+' - R$'+rows[i].price+'</option>';
+    html += '<option value="'+rows[i].idProduct+'">'+rows[i].name+' - R$'+rows[i].price.toFixed(2)+'</option>';
   }
   $('#products-select').html(html);
 
@@ -195,13 +215,13 @@ socket.on('650 ORD-SHOW-OK', function(data){
     html += '<tr>\
               <th scope="row">'+data[0][i].idOrder+'</th>\
               <td>'+data[0][i].name+'</td>\
-              <td>R$ '+data[0][i].price+'</td>\
+              <td>R$ '+data[0][i].price.toFixed(2)+'</td>\
             </tr>';
   }
   html += '<tr>\
             <th scope="row">Total</th>\
             <td></td>\
-            <th>R$ '+data[1][0].total+'</th>\
+            <th>R$ '+data[1][0].total.toFixed(2)+'</th>\
           </tr>';
   html += '</tbody></table>';
 
@@ -231,7 +251,7 @@ socket.on('850 ORD-EDIT-SHOW-OK', function(data){
   var products_select_edit = '';
 
   for (var i = 0; i < products.length; i++) {
-    products_select_edit += '<option value="'+products[i].idProduct+'">'+products[i].name+' - R$'+products[i].price+'</option>';
+    products_select_edit += '<option value="'+products[i].idProduct+'">'+products[i].name+' - R$'+products[i].price.toFixed(2)+'</option>';
   }
 
   $('#products-select-edit').html(products_select_edit);

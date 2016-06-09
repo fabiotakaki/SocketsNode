@@ -72,6 +72,7 @@ io.on('connection', function(socket){
       if(err){
         console.log('80 GAR-LIST-NOT');
          socket.broadcast.emit('80 GAR-LIST-NOT');
+         return;
       }
 
       console.log('60 GAR-LIST-OK');
@@ -97,6 +98,7 @@ io.on('connection', function(socket){
       if(err){
         console.log('80 GAR-LIST-NOT');
         io.emit('80 GAR-LIST-NOT');
+        return;
       }
 
       console.log('60 GAR-LIST-OK');
@@ -105,79 +107,90 @@ io.on('connection', function(socket){
   });
 
 
-//--------------------------------//
-//----------- FUNÇÕES ------------//
-//--------------------------------//
+  //--------------------------------//
+  //----------- FUNÇÕES ------------//
+  //--------------------------------//
 
-//--------------------------------//
-//---- Verifica Status da Mesa ---//
-//--------------------------------//
-function verifyStatus(table){
-  // Se a quantidade de pedidos for 0, eu fecho a mesa
-  con.query('SELECT COUNT(*) AS count FROM orders WHERE idTable = '+table,function(err,result3){
-    if(result3[0].count == 0){
-      // Atualizo a mesa para fechada !
-      con.query(
-        'UPDATE tables SET status = ? Where idTable = ?',
-        ["F", table],
-        function (err, result) {
-          if (err){
-            console.log('1270 TBL-STATUS-NOT');
-            socket.emit('1270 TBL-STATUS-NOT');
-          }
+  //--------------------------------//
+  //--- Atualiza Listagem da Mesa --//
+  //--------------------------------//
+  function updateListTables(){
+    // Mando a listagem de mesas para todos que estão na listagem de mesas
+    con.query('SELECT * FROM tables',function(err,rows){
 
-          console.log('Changed ' + result.changedRows + ' rows');
-          console.log('1271 TBL-STATUS-OK');
+      // Se caso der erro, envio um 1000 TBL-LIST-NOT
+      if(err){
+        console.log('1000 TBL-LIST-NOT');
+        socket.to('tables').emit('1000 TBL-LIST-NOT');
+        return;
+      }
 
-          socket.emit('1271 TBL-STATUS-OK');
+      console.log('1000 TBL-LIST-OK');
+      socket.to('tables').emit('1000 TBL-LIST-OK', rows);
+    });
+  }
 
-          // Mando a listagem de mesas para todos que estão na listagem de mesas
-          con.query('SELECT * FROM tables',function(err,rows){
-
-            // Se caso der erro, envio um 1000 TBL-LIST-NOT
-            if(err){
-              console.log('1000 TBL-LIST-NOT');
-              socket.to('tables').emit('1000 TBL-LIST-NOT');
+  //--------------------------------//
+  //---- Verifica Status da Mesa ---//
+  //--------------------------------//
+  function verifyStatus(table){
+    // Se a quantidade de pedidos for 0, eu fecho a mesa
+    con.query('SELECT COUNT(*) AS count FROM orders WHERE idTable = '+table,function(err,result3){
+      if(result3[0].count == 0){
+        // Atualizo a mesa para fechada !
+        con.query(
+          'UPDATE tables SET status = ? Where idTable = ?',
+          ["F", table],
+          function (err, result) {
+            if (err){
+              console.log('1270 TBL-STATUS-NOT');
+              socket.emit('1270 TBL-STATUS-NOT');
+              return;
             }
 
-            console.log('1000 TBL-LIST-OK');
-            socket.to('tables').emit('1000 TBL-LIST-OK', rows);
-          });
-        }
-      );
-    }else{
-      // Atualizo a mesa para aberta !
-      con.query(
-        'UPDATE tables SET status = ? Where idTable = ?',
-        ["A", table],
-        function (err, result) {
-          if (err){
-            console.log('1270 TBL-STATUS-NOT');
-            socket.emit('1270 TBL-STATUS-NOT');
+            console.log('Changed ' + result.changedRows + ' rows');
+            console.log('1271 TBL-STATUS-OK');
+
+            socket.emit('1271 TBL-STATUS-OK');
+
+            // Mando a listagem de mesas para todos que estão na listagem de mesas
+            con.query('SELECT * FROM tables',function(err,rows){
+
+              // Se caso der erro, envio um 1000 TBL-LIST-NOT
+              if(err){
+                console.log('1000 TBL-LIST-NOT');
+                socket.to('tables').emit('1000 TBL-LIST-NOT');
+              }
+
+              console.log('1000 TBL-LIST-OK');
+              socket.to('tables').emit('1000 TBL-LIST-OK', rows);
+            });
           }
-
-          console.log('Changed ' + result.changedRows + ' rows');
-          console.log('1271 TBL-STATUS-OK');
-
-          socket.emit('1271 TBL-STATUS-OK');
-
-          // Mando a listagem de mesas para todos que estão na listagem de mesas
-          con.query('SELECT * FROM tables',function(err,rows){
-
-            // Se caso der erro, envio um 1000 TBL-LIST-NOT
-            if(err){
-              console.log('1000 TBL-LIST-NOT');
-              socket.to('tables').emit('1000 TBL-LIST-NOT');
+        );
+      }else{
+        // Atualizo a mesa para aberta !
+        con.query(
+          'UPDATE tables SET status = ? Where idTable = ?',
+          ["A", table],
+          function (err, result) {
+            if (err){
+              console.log('1270 TBL-STATUS-NOT');
+              socket.emit('1270 TBL-STATUS-NOT');
+              return;
             }
 
-            console.log('1000 TBL-LIST-OK');
-            socket.to('tables').emit('1000 TBL-LIST-OK', rows);
-          });
-        }
-      );
-    }
-  });
-}
+            console.log('Changed ' + result.changedRows + ' rows');
+            console.log('1271 TBL-STATUS-OK');
+
+            socket.emit('1271 TBL-STATUS-OK');
+
+            // Mando a listagem de mesas para todos que estão na listagem de mesas
+            updateListTables();
+          }
+        );
+      }
+    });
+  }
 
   //------------------------------//
   //----- Identifica Garçom ------//
@@ -189,6 +202,7 @@ function verifyStatus(table){
     if(id == null){
       console.log('153 GAR-WAITER-NOT');
       socket.emit('153 GAR-WAITER-NOT');
+      return;
     }
 
     // consulto e vejo se o garçom existe e se ele não está conectado
@@ -196,12 +210,14 @@ function verifyStatus(table){
       if(err){
         console.log('153 GAR-WAITER-NOT');
         socket.emit('153 GAR-WAITER-NOT');
+        return;
       }
 
       // se o garçom estiver conectado !
       if(row[0].connected == 'S'){
         console.log('154 GAR-CONNECT-NOT');
         socket.emit('154 GAR-CONNECT-NOT');
+        return;
       
       // senão atualizo para conectado e envio o sucesso da conexão do garçom.
       }else{ 
@@ -212,6 +228,7 @@ function verifyStatus(table){
             if (err){
               console.log('154 GAR-CONNECT-NOT');
               socket.emit('154 GAR-CONNECT-NOT');
+              return;
             }
 
             idWaiter = id;
@@ -257,6 +274,7 @@ function verifyStatus(table){
       if(err){
         console.log('1000 TBL-LIST-NOT');
         socket.emit('1000 TBL-LIST-NOT');
+        return;
       }
 
       console.log('1000 TBL-LIST-OK');
@@ -277,6 +295,7 @@ function verifyStatus(table){
       if(err){
         console.log('1351 TBL-LIST-SELECT-NOT');
         socket.emit('1351 TBL-LIST-SELECT-NOT');
+        return;
       }
 
       console.log('1350 TBL-LIST-SELECT-OK');
@@ -297,6 +316,7 @@ function verifyStatus(table){
       if(err){
         console.log('1151 PRO-LIST-NOT');
         socket.emit('1151 PRO-LIST-NOT');
+        return;
       }
 
       console.log('1150 PRO-LIST-OK');
@@ -322,11 +342,31 @@ function verifyStatus(table){
       if(err){
         console.log('453 ORD-CONSULT-NOT');
         socket.emit('453 ORD-CONSULT-NOT');
+        return;
       }
       data.push(rows);
 
-      console.log('453 ORD-CONSULT-OK');
-      socket.emit('453 ORD-CONSULT-OK', data);
+      // mando todos os produtos dessa mesa
+      var query;
+      query = 'SELECT o.*, p.`name`, p.`price` FROM `orders` AS o ';
+      query += 'INNER JOIN `orders_products` AS op ON o.`idOrder` = op.`idOrder` ';
+      query += 'INNER JOIN `products` AS p ON p.`idProduct` = op.`idProduct` ';
+      query += 'WHERE o.idTable = '+ table +' ORDER BY o.idOrder';
+
+      con.query(query, function(err, products){
+        // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+        if(err){
+          console.log('453 ORD-CONSULT-NOT');
+          socket.emit('453 ORD-CONSULT-NOT');
+          return;
+        }
+        console.log(products);
+
+        data.push(products);
+        console.log('453 ORD-CONSULT-OK');
+        socket.emit('453 ORD-CONSULT-OK', data);
+      
+      });
     });
   });
 
@@ -423,6 +463,7 @@ function verifyStatus(table){
         if (err){
           console.log('851 ORD-EDIT-NOT');
           socket.emit('851 ORD-EDIT-NOT');
+          return;
         }else{
 
           // Adiciono os novos produtos no pedido
@@ -485,6 +526,7 @@ function verifyStatus(table){
       if(err){
         console.log('353 ORD-CREATE-NOT');
         socket.emit('353 ORD-CREATE-NOT');
+        return;
       }else{
         console.log('350 ORD-CREATE-OK');
 
@@ -505,33 +547,44 @@ function verifyStatus(table){
         }
 
         // Mando a listagem de mesas para todos que estão na listagem de mesas
-        con.query('SELECT * FROM tables',function(err,rows){
+        updateListTables();
 
-          // Se caso der erro, envio um 1000 TBL-LIST-NOT
-          if(err){
-            console.log('1000 TBL-LIST-NOT');
-            socket.to('tables').emit('1000 TBL-LIST-NOT');
-          }
-
-          console.log('1000 TBL-LIST-OK');
-          socket.to('tables').emit('1000 TBL-LIST-OK', rows);
-        });
-
-        // Devolvo a listagem de pedidos pra todo mundo que esta na de pedidos
+        // Mando a listagem de mesas para a página
         con.query('SELECT * FROM orders WHERE idTable='+data[0] ,function(err,rows){
-
           var orders_list = [];
+
           orders_list.push(data[0]);
           // Se caso der erro, envio um 453 ORD-CONSULT-NOT
           if(err){
             console.log('453 ORD-CONSULT-NOT');
             io.in('orders'+data[0]).emit('453 ORD-CONSULT-NOT');
+            return;
           }
-
           orders_list.push(rows);
-          console.log('453 ORD-CONSULT-OK');
-          io.in('orders'+data[0]).emit('453 ORD-CONSULT-OK', orders_list);
+
+          // mando todos os produtos dessa mesa
+          var query;
+          query = 'SELECT o.*, p.`name`, p.`price` FROM `orders` AS o ';
+          query += 'INNER JOIN `orders_products` AS op ON o.`idOrder` = op.`idOrder` ';
+          query += 'INNER JOIN `products` AS p ON p.`idProduct` = op.`idProduct` ';
+          query += 'WHERE o.idTable = '+ data[0] +' ORDER BY o.idOrder';
+
+          con.query(query, function(err, products){
+            // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+            if(err){
+              console.log('453 ORD-CONSULT-NOT');
+              io.in('orders'+data[0]).emit('453 ORD-CONSULT-NOT');
+              return;
+            }
+
+            orders_list.push(products);
+            console.log('453 ORD-CONSULT-OK');
+            io.in('orders'+data[0]).emit('453 ORD-CONSULT-OK', orders_list);
+          
+          });
         });
+
+
       }
     });
 
@@ -549,6 +602,7 @@ function verifyStatus(table){
         if (err){
           console.log('751 ORD-DELETE-NOT');
           socket.emit('751 ORD-DELETE-NOT');
+          return;
         }else{
 
           // Devolvo a listagem de pedidos pra todo mundo que esta na de pedidos
@@ -657,6 +711,7 @@ function verifyStatus(table){
         if (err){
           console.log('951 TBL-CLOSE-NOT');
           socket.emit('951 TBL-CLOSE-NOT');
+          return;
         }else{
           console.log('Deleted ' + result1.affectedRows + ' rows');
 
@@ -687,6 +742,7 @@ function verifyStatus(table){
                   if (err){
                     console.log('1270 TBL-STATUS-NOT');
                     socket.emit('1270 TBL-STATUS-NOT');
+                    return;
                   }
 
                   console.log('Changed ' + result.changedRows + ' rows');
@@ -695,17 +751,8 @@ function verifyStatus(table){
                   socket.emit('1271 TBL-STATUS-OK');
 
                   // Mando a listagem de mesas para todos que estão na listagem de mesas
-                  con.query('SELECT * FROM tables',function(err,rows){
+                  updateListTables();
 
-                    // Se caso der erro, envio um 1000 TBL-LIST-NOT
-                    if(err){
-                      console.log('1000 TBL-LIST-NOT');
-                      socket.to('tables').emit('1000 TBL-LIST-NOT');
-                    }
-
-                    console.log('1000 TBL-LIST-OK');
-                    socket.to('tables').emit('1000 TBL-LIST-OK', rows);
-                  });
                 }
               );
             }
