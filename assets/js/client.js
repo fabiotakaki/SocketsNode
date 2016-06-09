@@ -121,7 +121,7 @@ socket.on('453 ORD-CONSULT-OK', function(rows){
               <th scope="row">'+rows[1][i].idOrder+'</th>\
               <td>\
               <div class="btn-group" role="group">\
-                <button class="btn btn-primary" id="viz-order">Visualizar</button> \
+                <button class="btn btn-primary" id="viz-order" idOrder="'+rows[1][i].idOrder+'">Visualizar</button> \
                 <button class="btn btn-warning">Editar</button> \
                 <button class="btn btn-danger" idOrder="'+rows[1][i].idOrder+'" id="delOrder">Deletar</button>\
               </div>\
@@ -196,8 +196,46 @@ $(document).off('click', '#delOrder').on('click', '#delOrder', function (e) {
 
 // visualizar pedido
 $(document).off('click', '#viz-order').on('click', '#viz-order', function (e) {
-  $('#viz-modal').modal();
+  socket.emit('600 ORD-SHOW', $(this).attr('idOrder'));
   e.preventDefault();
+});
+
+//------------------------------//
+//----- Visualiza Pedido -------//
+//------------------------------//
+socket.on('650 ORD-SHOW-OK', function(data){
+  console.log(data);
+  var html = '';
+
+  $('#viz-modal-title').html('Produtos');
+
+  html += '<table class="table table-hover">\
+          <thead>\
+            <tr>\
+              <th>Número do Pedido</th>\
+              <th>Produto</th>\
+              <th>Preço</th>\
+            </tr>\
+          </thead>\
+          <tbody>';
+  for (var i = 0; i < data[0].length; i++) {
+    html += '<tr>\
+              <th scope="row">'+data[0][i].idOrder+'</th>\
+              <td>'+data[0][i].name+'</td>\
+              <td>R$ '+data[0][i].price+'</td>\
+            </tr>';
+  }
+  html += '<tr>\
+            <th scope="row">Total</th>\
+            <td></td>\
+            <th>R$ '+data[1][0].total+'</th>\
+          </tr>';
+  html += '</tbody></table>';
+
+  $('#viz-modal-body').html(html);
+
+  $('#viz-modal').modal();
+
 });
 
 // imprimir pedido

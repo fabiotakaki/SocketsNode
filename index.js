@@ -240,6 +240,45 @@ io.on('connection', function(socket){
     });
   });
 
+
+  //------------------------------//
+  //----- Visualiza Pedido -------//
+  //------------------------------//
+  socket.on('600 ORD-SHOW', function(idOrder){
+    var data = [];
+    var query;
+    query = 'SELECT o.*, p.`name`, p.`price` FROM `orders` AS o ';
+    query += 'INNER JOIN `orders_products` AS op ON o.`idOrder` = op.`idOrder` ';
+    query += 'INNER JOIN `products` AS p ON p.`idProduct` = op.`idProduct` ';
+    query += 'WHERE o.idOrder ='+idOrder;
+    // Mando a listagem de mesas para a página
+    con.query(query ,function(err,row){
+      // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+      if(err){
+        console.log('651 ORD-SHOW-NOT');
+        socket.emit('651 ORD-SHOW-NOT');
+        return;
+      }
+      data.push(row);
+
+      var query1 = 'SELECT SUM(p.price) AS total FROM `orders` AS o ';
+      query1 += 'INNER JOIN `orders_products` AS op ON o.`idOrder` = op.`idOrder` ';
+      query1 += 'INNER JOIN `products` AS p ON p.`idProduct` = op.`idProduct` ';
+      query1 += 'WHERE o.idOrder ='+idOrder;
+      con.query(query1 ,function(err,row1){
+        // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+        if(err){
+          console.log('651 ORD-SHOW-NOT');
+          socket.emit('651 ORD-SHOW-NOT');
+          return;
+        }
+        data.push(row1);
+        console.log('650 ORD-SHOW-OK');
+        socket.emit('650 ORD-SHOW-OK', data);
+      }); // fimm da busca do total
+    });
+  });
+
   //------------------------------//
   //------- Adiciona Pedido ------//
   //------------------------------//
