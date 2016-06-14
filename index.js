@@ -448,7 +448,7 @@ io.on('connection', function(socket){
   });
 
   //------------------------------//
-  //----- Visualiza Editar -------//
+  //-----  Edita de uma vez ------//
   //------------------------------//
   socket.on('801 ORD-EDIT', function(data){
     
@@ -480,6 +480,39 @@ io.on('connection', function(socket){
               }
             });
           }
+
+          // Mando a listagem de pedidos
+          con.query('SELECT * FROM orders WHERE idTable='+data[2] ,function(err,rows){
+            var orders_data = [];
+            orders_data.push(data[2]);
+            // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+            if(err){
+              console.log('453 ORD-CONSULT-NOT');
+              socket.emit('453 ORD-CONSULT-NOT');
+              return;
+            }
+            orders_data.push(rows);
+
+            // mando todos os produtos dessa mesa
+            var query;
+            query = 'SELECT o.*, p.`name`, p.`price` FROM `orders` AS o ';
+            query += 'INNER JOIN `orders_products` AS op ON o.`idOrder` = op.`idOrder` ';
+            query += 'INNER JOIN `products` AS p ON p.`idProduct` = op.`idProduct` ';
+            query += 'WHERE o.idTable = '+ data[2] +' ORDER BY o.idOrder';
+
+            con.query(query, function(err, products){
+              // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+              if(err){
+                console.log('453 ORD-CONSULT-NOT');
+                socket.emit('453 ORD-CONSULT-NOT');
+                return;
+              }
+
+              orders_data.push(products);
+              console.log('453 ORD-CONSULT-OK');
+              io.in('orders'+data[2]).emit('453 ORD-CONSULT-OK', orders_data);
+            });
+          });
 
           console.log('850 ORD-EDIT-OK');
           socket.emit('850 ORD-EDIT-OK');
@@ -605,20 +638,39 @@ io.on('connection', function(socket){
           return;
         }else{
 
-          // Devolvo a listagem de pedidos pra todo mundo que esta na de pedidos
+          // Mando a listagem de mesas para a página
           con.query('SELECT * FROM orders WHERE idTable='+data[0] ,function(err,rows){
-
             var orders_list = [];
+
             orders_list.push(data[0]);
             // Se caso der erro, envio um 453 ORD-CONSULT-NOT
             if(err){
               console.log('453 ORD-CONSULT-NOT');
               io.in('orders'+data[0]).emit('453 ORD-CONSULT-NOT');
+              return;
             }
-
             orders_list.push(rows);
-            console.log('453 ORD-CONSULT-OK');
-            io.in('orders'+data[0]).emit('453 ORD-CONSULT-OK', orders_list);
+
+            // mando todos os produtos dessa mesa
+            var query;
+            query = 'SELECT o.*, p.`name`, p.`price` FROM `orders` AS o ';
+            query += 'INNER JOIN `orders_products` AS op ON o.`idOrder` = op.`idOrder` ';
+            query += 'INNER JOIN `products` AS p ON p.`idProduct` = op.`idProduct` ';
+            query += 'WHERE o.idTable = '+ data[0] +' ORDER BY o.idOrder';
+
+            con.query(query, function(err, products){
+              // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+              if(err){
+                console.log('453 ORD-CONSULT-NOT');
+                io.in('orders'+data[0]).emit('453 ORD-CONSULT-NOT');
+                return;
+              }
+
+              orders_list.push(products);
+              console.log('453 ORD-CONSULT-OK');
+              io.in('orders'+data[0]).emit('453 ORD-CONSULT-OK', orders_list);
+            
+            });
           });
 
           // Se a quantidade de pedidos for 0, eu fecho a mesa
@@ -658,34 +710,70 @@ io.on('connection', function(socket){
 
         // Mando a listagem de pedidos
         con.query('SELECT * FROM orders WHERE idTable='+table ,function(err,rows){
-          var data = [];
-          data.push(table);
+          var orders_data = [];
+          orders_data.push(table);
           // Se caso der erro, envio um 453 ORD-CONSULT-NOT
           if(err){
             console.log('453 ORD-CONSULT-NOT');
             socket.emit('453 ORD-CONSULT-NOT');
             return;
           }
-          data.push(rows);
+          orders_data.push(rows);
 
-          console.log('453 ORD-CONSULT-OK');
-          io.in('orders'+table).emit('453 ORD-CONSULT-OK', data);
+          // mando todos os produtos dessa mesa
+          var query;
+          query = 'SELECT o.*, p.`name`, p.`price` FROM `orders` AS o ';
+          query += 'INNER JOIN `orders_products` AS op ON o.`idOrder` = op.`idOrder` ';
+          query += 'INNER JOIN `products` AS p ON p.`idProduct` = op.`idProduct` ';
+          query += 'WHERE o.idTable = '+ table +' ORDER BY o.idOrder';
+
+          con.query(query, function(err, products){
+            // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+            if(err){
+              console.log('453 ORD-CONSULT-NOT');
+              socket.emit('453 ORD-CONSULT-NOT');
+              return;
+            }
+
+            orders_data.push(products);
+            console.log('453 ORD-CONSULT-OK');
+            io.in('orders'+table).emit('453 ORD-CONSULT-OK', orders_data); 
+          });
+
         });
 
         // Mando a listagem de pedidos
         con.query('SELECT * FROM orders WHERE idTable='+old_table ,function(err,rows){
-          var data = [];
-          data.push(old_table);
+          var orders_data = [];
+          orders_data.push(old_table);
           // Se caso der erro, envio um 453 ORD-CONSULT-NOT
           if(err){
             console.log('453 ORD-CONSULT-NOT');
             socket.emit('453 ORD-CONSULT-NOT');
             return;
           }
-          data.push(rows);
+          orders_data.push(rows);
 
-          console.log('453 ORD-CONSULT-OK');
-          io.in('orders'+old_table).emit('453 ORD-CONSULT-OK', data);
+          // mando todos os produtos dessa mesa
+          var query;
+          query = 'SELECT o.*, p.`name`, p.`price` FROM `orders` AS o ';
+          query += 'INNER JOIN `orders_products` AS op ON o.`idOrder` = op.`idOrder` ';
+          query += 'INNER JOIN `products` AS p ON p.`idProduct` = op.`idProduct` ';
+          query += 'WHERE o.idTable = '+ old_table +' ORDER BY o.idOrder';
+
+          con.query(query, function(err, products){
+            // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+            if(err){
+              console.log('453 ORD-CONSULT-NOT');
+              socket.emit('453 ORD-CONSULT-NOT');
+              return;
+            }
+
+            orders_data.push(products);
+            console.log('453 ORD-CONSULT-OK');
+            io.in('orders'+old_table).emit('453 ORD-CONSULT-OK', orders_data);
+          });
+
         });
 
         verifyStatus(table);

@@ -342,6 +342,7 @@ $(document).off('click', '#edit-modal-submit').on('click', '#edit-modal-submit',
     products[i] = $(selected).val();
   });
   data.push(products);
+  data.push(idTable);
   socket.emit('801 ORD-EDIT', data);
   e.preventDefault();
 });
