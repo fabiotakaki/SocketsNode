@@ -1,4 +1,9 @@
-// Author: Fábio S. Takaki
+/* Authors: 
+  Arthur Pires
+  Fábio S. Takaki
+  Lucas Martins
+  Ming
+*/
 
 // Solução para imprimir elementos
 function printElement(elem, append, delimiter) {
@@ -34,10 +39,10 @@ var socket = io();
 var idTable = 0; // Vamos usá-la para identificar a tabela que estamos interagindo.
 
 // Requisito os Waiters
-socket.emit('50 GAR-LIST');
+socket.emit('10 GAR-LIST');
 
 // Se sucesso, adiciono eles no select
-socket.on('60 GAR-LIST-OK', function(rows){
+socket.on('50 GAR-LIST-OK', function(rows){
   var html = '';
 
   for (var i = 0; i < rows.length; i++) {
@@ -59,7 +64,7 @@ $('form').submit(function(){
 });
 
 // Se caso o Garçom foi identificado estiver online..
-socket.on('154 GAR-CONNECT-NOT', function(){
+socket.on('153 GAR-CONNECT-NOT', function(){
   alert('Este garçom está conectado ou há algum erro em identificar o mesmo.');
 });
 
@@ -67,12 +72,12 @@ socket.on('154 GAR-CONNECT-NOT', function(){
 //----- Listagem de Mesas ------//
 //------------------------------//
 // Se caso o Garçom foi identificado com sucesso requisito as mesas
-socket.on('150 GAR-CONNECT-OK', function(){
+socket.on('152 GAR-CONNECT-OK', function(){
   socket.emit('1000 TBL-LIST');
 });
 
 // Se sucesso, adiciono eles no content
-socket.on('1000 TBL-LIST-OK', function(rows){
+socket.on('1050 TBL-LIST-OK', function(rows){
   var html = '';
 
   html += '<div class="col-lg-12"><h1>Listagem de Mesas</h1> <p>As mesas em vermelho indicam que a mesa está fechada. Para abri-lá, clique em visualizar.</p></div>';
@@ -98,7 +103,7 @@ socket.on('1000 TBL-LIST-OK', function(rows){
 //----- Listagem de Pedidos ----//
 //------------------------------//
 // Se sucesso, adiciono eles no content
-socket.on('453 ORD-CONSULT-OK', function(rows){
+socket.on('450 ORD-CONSULT-OK', function(rows){
   var html = '';
   var orders_select = '';
   var tables_select = '';

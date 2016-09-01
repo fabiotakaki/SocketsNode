@@ -1,4 +1,10 @@
-// Author: Fábio S. Takaki
+/* Authors: 
+  Arthur Pires
+  Fábio S. Takaki
+  Lucas Martins
+  Ming
+*/
+//          
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -68,15 +74,15 @@ io.on('connection', function(socket){
     // Mando a listagem de Garçons para todos os outros
     // identificarem quem está online
     con.query('SELECT * FROM waiters',function(err,rows){
-      // Se caso der erro, envio um 80 GAR-LIST-NOT
+      // Se caso der erro, envio um 51 GAR-LIST-NOT
       if(err){
-        console.log('80 GAR-LIST-NOT');
-         socket.broadcast.emit('80 GAR-LIST-NOT');
+        console.log('51 GAR-LIST-NOT');
+         socket.broadcast.emit('51 GAR-LIST-NOT');
          return;
       }
 
-      console.log('60 GAR-LIST-OK');
-       socket.broadcast.emit('60 GAR-LIST-OK', rows);
+      console.log('50 GAR-LIST-OK');
+       socket.broadcast.emit('50 GAR-LIST-OK', rows);
     });
 
     // encerro a conexão do banco de dados
@@ -90,19 +96,19 @@ io.on('connection', function(socket){
   });
 
   // Função que devolve os garçons do banco de dados
-  socket.on('50 GAR-LIST', function(){
+  socket.on('10 GAR-LIST', function(){
     // Mando a listagem de Garçons para a página
     con.query('SELECT * FROM waiters',function(err,rows){
 
-      // Se caso der erro, envio um 80 GAR-LIST-NOT
+      // Se caso der erro, envio um 51 GAR-LIST-NOT
       if(err){
-        console.log('80 GAR-LIST-NOT');
-        io.emit('80 GAR-LIST-NOT');
+        console.log('51 GAR-LIST-NOT');
+        io.emit('51 GAR-LIST-NOT');
         return;
       }
 
-      console.log('60 GAR-LIST-OK');
-      io.emit('60 GAR-LIST-OK', rows);
+      console.log('50 GAR-LIST-OK');
+      io.emit('50 GAR-LIST-OK', rows);
     });
   });
 
@@ -118,15 +124,15 @@ io.on('connection', function(socket){
     // Mando a listagem de mesas para todos que estão na listagem de mesas
     con.query('SELECT * FROM tables',function(err,rows){
 
-      // Se caso der erro, envio um 1000 TBL-LIST-NOT
+      // Se caso der erro, envio um 1051 TBL-LIST-NOT
       if(err){
-        console.log('1000 TBL-LIST-NOT');
-        socket.to('tables').emit('1000 TBL-LIST-NOT');
+        console.log('1051 TBL-LIST-NOT');
+        socket.to('tables').emit('1051 TBL-LIST-NOT');
         return;
       }
 
-      console.log('1000 TBL-LIST-OK');
-      socket.to('tables').emit('1000 TBL-LIST-OK', rows);
+      console.log('1050 TBL-LIST-OK');
+      socket.to('tables').emit('1050 TBL-LIST-OK', rows);
     });
   }
 
@@ -143,27 +149,27 @@ io.on('connection', function(socket){
           ["F", table],
           function (err, result) {
             if (err){
-              console.log('1270 TBL-STATUS-NOT');
-              socket.emit('1270 TBL-STATUS-NOT');
+              console.log('1252 TBL-STATUS-NOT');
+              socket.emit('1252 TBL-STATUS-NOT');
               return;
             }
 
             console.log('Changed ' + result.changedRows + ' rows');
-            console.log('1271 TBL-STATUS-OK');
+            console.log('1253 TBL-STATUS-OK');
 
-            socket.emit('1271 TBL-STATUS-OK');
+            socket.emit('1253 TBL-STATUS-OK');
 
             // Mando a listagem de mesas para todos que estão na listagem de mesas
             con.query('SELECT * FROM tables',function(err,rows){
 
-              // Se caso der erro, envio um 1000 TBL-LIST-NOT
+              // Se caso der erro, envio um 1051 TBL-LIST-NOT
               if(err){
-                console.log('1000 TBL-LIST-NOT');
-                socket.to('tables').emit('1000 TBL-LIST-NOT');
+                console.log('1051 TBL-LIST-NOT');
+                socket.to('tables').emit('1051 TBL-LIST-NOT');
               }
 
-              console.log('1000 TBL-LIST-OK');
-              socket.to('tables').emit('1000 TBL-LIST-OK', rows);
+              console.log('1050 TBL-LIST-OK');
+              socket.to('tables').emit('1050 TBL-LIST-OK', rows);
             });
           }
         );
@@ -174,15 +180,15 @@ io.on('connection', function(socket){
           ["A", table],
           function (err, result) {
             if (err){
-              console.log('1270 TBL-STATUS-NOT');
-              socket.emit('1270 TBL-STATUS-NOT');
+              console.log('1252 TBL-STATUS-NOT');
+              socket.emit('1252 TBL-STATUS-NOT');
               return;
             }
 
             console.log('Changed ' + result.changedRows + ' rows');
-            console.log('1271 TBL-STATUS-OK');
+            console.log('1253 TBL-STATUS-OK');
 
-            socket.emit('1271 TBL-STATUS-OK');
+            socket.emit('1253 TBL-STATUS-OK');
 
             // Mando a listagem de mesas para todos que estão na listagem de mesas
             updateListTables();
@@ -198,25 +204,25 @@ io.on('connection', function(socket){
   socket.on('100 GAR-WAITER', function(id){
     console.log('100 GAR-WAITER ' + id);
     
-    // Se o ID for nulo, ou não existir no banco, responde com 153 GAR-WAITER-NOT
+    // Se o ID for nulo, ou não existir no banco, responde com 151 GAR-WAITER-NOT
     if(id == null){
-      console.log('153 GAR-WAITER-NOT');
-      socket.emit('153 GAR-WAITER-NOT');
+      console.log('151 GAR-WAITER-NOT');
+      socket.emit('151 GAR-WAITER-NOT');
       return;
     }
 
     // consulto e vejo se o garçom existe e se ele não está conectado
     con.query('SELECT * FROM waiters WHERE idWaiter='+id ,function(err,row){
       if(err){
-        console.log('153 GAR-WAITER-NOT');
-        socket.emit('153 GAR-WAITER-NOT');
+        console.log('151 GAR-WAITER-NOT');
+        socket.emit('151 GAR-WAITER-NOT');
         return;
       }
 
       // se o garçom estiver conectado !
       if(row[0].connected == 'S'){
-        console.log('154 GAR-CONNECT-NOT');
-        socket.emit('154 GAR-CONNECT-NOT');
+        console.log('153 GAR-CONNECT-NOT');
+        socket.emit('153 GAR-CONNECT-NOT');
         return;
       
       // senão atualizo para conectado e envio o sucesso da conexão do garçom.
@@ -226,28 +232,28 @@ io.on('connection', function(socket){
           ["S", id],
           function (err, result) {
             if (err){
-              console.log('154 GAR-CONNECT-NOT');
-              socket.emit('154 GAR-CONNECT-NOT');
+              console.log('153 GAR-CONNECT-NOT');
+              socket.emit('153 GAR-CONNECT-NOT');
               return;
             }
 
             idWaiter = id;
             console.log('Changed ' + result.changedRows + ' rows');
-            console.log('150 GAR-CONNECT-OK');
+            console.log('152 GAR-CONNECT-OK');
 
-            socket.emit('150 GAR-CONNECT-OK');
+            socket.emit('152 GAR-CONNECT-OK');
 
             // Mando a listagem de Garçons para todos os outros
             // identificarem quem está online
             con.query('SELECT * FROM waiters',function(err,rows){
-              // Se caso der erro, envio um 80 GAR-LIST-NOT
+              // Se caso der erro, envio um 51 GAR-LIST-NOT
               if(err){
-                console.log('80 GAR-LIST-NOT');
-                 socket.broadcast.emit('80 GAR-LIST-NOT');
+                console.log('51 GAR-LIST-NOT');
+                 socket.broadcast.emit('51 GAR-LIST-NOT');
               }
 
-              console.log('60 GAR-LIST-OK');
-               socket.broadcast.emit('60 GAR-LIST-OK', rows);
+              console.log('50 GAR-LIST-OK');
+               socket.broadcast.emit('50 GAR-LIST-OK', rows);
             });
           }
         );
@@ -270,15 +276,15 @@ io.on('connection', function(socket){
     // Mando a listagem de mesas para a página
     con.query('SELECT * FROM tables',function(err,rows){
 
-      // Se caso der erro, envio um 1000 TBL-LIST-NOT
+      // Se caso der erro, envio um 1051 TBL-LIST-NOT
       if(err){
-        console.log('1000 TBL-LIST-NOT');
-        socket.emit('1000 TBL-LIST-NOT');
+        console.log('1051 TBL-LIST-NOT');
+        socket.emit('1051 TBL-LIST-NOT');
         return;
       }
 
-      console.log('1000 TBL-LIST-OK');
-      socket.emit('1000 TBL-LIST-OK', rows);
+      console.log('1050 TBL-LIST-OK');
+      socket.emit('1050 TBL-LIST-OK', rows);
     });
 
   });
@@ -338,10 +344,10 @@ io.on('connection', function(socket){
     con.query('SELECT * FROM orders WHERE idTable='+table ,function(err,rows){
       var data = [];
       data.push(table);
-      // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+      // Se caso der erro, envio um 451 ORD-CONSULT-NOT
       if(err){
-        console.log('453 ORD-CONSULT-NOT');
-        socket.emit('453 ORD-CONSULT-NOT');
+        console.log('451 ORD-CONSULT-NOT');
+        socket.emit('451 ORD-CONSULT-NOT');
         return;
       }
       data.push(rows);
@@ -354,17 +360,17 @@ io.on('connection', function(socket){
       query += 'WHERE o.idTable = '+ table +' ORDER BY o.idOrder';
 
       con.query(query, function(err, products){
-        // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+        // Se caso der erro, envio um 451 ORD-CONSULT-NOT
         if(err){
-          console.log('453 ORD-CONSULT-NOT');
-          socket.emit('453 ORD-CONSULT-NOT');
+          console.log('451 ORD-CONSULT-NOT');
+          socket.emit('451 ORD-CONSULT-NOT');
           return;
         }
         console.log(products);
 
         data.push(products);
-        console.log('453 ORD-CONSULT-OK');
-        socket.emit('453 ORD-CONSULT-OK', data);
+        console.log('450 ORD-CONSULT-OK');
+        socket.emit('450 ORD-CONSULT-OK', data);
       
       });
     });
@@ -383,7 +389,7 @@ io.on('connection', function(socket){
     query += 'WHERE o.idOrder ='+idOrder;
     // Mando a listagem de mesas para a página
     con.query(query ,function(err,row){
-      // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+      // Se caso der erro, envio um 451 ORD-CONSULT-NOT
       if(err){
         console.log('651 ORD-SHOW-NOT');
         socket.emit('651 ORD-SHOW-NOT');
@@ -396,7 +402,7 @@ io.on('connection', function(socket){
       query1 += 'INNER JOIN `products` AS p ON p.`idProduct` = op.`idProduct` ';
       query1 += 'WHERE o.idOrder ='+idOrder;
       con.query(query1 ,function(err,row1){
-        // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+        // Se caso der erro, envio um 451 ORD-CONSULT-NOT
         if(err){
           console.log('651 ORD-SHOW-NOT');
           socket.emit('651 ORD-SHOW-NOT');
@@ -421,7 +427,7 @@ io.on('connection', function(socket){
     query += 'WHERE o.idOrder ='+idOrder;
     // Mando a listagem de mesas para a página
     con.query(query ,function(err,row){
-      // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+      // Se caso der erro, envio um 451 ORD-CONSULT-NOT
       if(err){
         console.log('851 ORD-EDIT-SHOW-NOT');
         socket.emit('851 ORD-EDIT-SHOW-NOT');
@@ -461,8 +467,8 @@ io.on('connection', function(socket){
       [idOrder],
       function (err, result2) {
         if (err){
-          console.log('851 ORD-EDIT-NOT');
-          socket.emit('851 ORD-EDIT-NOT');
+          console.log('852 ORD-EDIT-NOT');
+          socket.emit('852 ORD-EDIT-NOT');
           return;
         }else{
 
@@ -485,10 +491,10 @@ io.on('connection', function(socket){
           con.query('SELECT * FROM orders WHERE idTable='+data[2] ,function(err,rows){
             var orders_data = [];
             orders_data.push(data[2]);
-            // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+            // Se caso der erro, envio um 451 ORD-CONSULT-NOT
             if(err){
-              console.log('453 ORD-CONSULT-NOT');
-              socket.emit('453 ORD-CONSULT-NOT');
+              console.log('451 ORD-CONSULT-NOT');
+              socket.emit('451 ORD-CONSULT-NOT');
               return;
             }
             orders_data.push(rows);
@@ -501,16 +507,16 @@ io.on('connection', function(socket){
             query += 'WHERE o.idTable = '+ data[2] +' ORDER BY o.idOrder';
 
             con.query(query, function(err, products){
-              // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+              // Se caso der erro, envio um 451 ORD-CONSULT-NOT
               if(err){
-                console.log('453 ORD-CONSULT-NOT');
-                socket.emit('453 ORD-CONSULT-NOT');
+                console.log('451 ORD-CONSULT-NOT');
+                socket.emit('451 ORD-CONSULT-NOT');
                 return;
               }
 
               orders_data.push(products);
-              console.log('453 ORD-CONSULT-OK');
-              io.in('orders'+data[2]).emit('453 ORD-CONSULT-OK', orders_data);
+              console.log('450 ORD-CONSULT-OK');
+              io.in('orders'+data[2]).emit('450 ORD-CONSULT-OK', orders_data);
             });
           });
 
@@ -530,8 +536,8 @@ io.on('connection', function(socket){
     
     // Se não foi enviado nenhum produto, não adiciono e retorno o NOT
     if(data[1].length == 0){
-      console.log('353 ORD-CREATE-NOT');
-      socket.emit('353 ORD-CREATE-NOT');
+      console.log('351 ORD-CREATE-NOT');
+      socket.emit('351 ORD-CREATE-NOT');
       return;
     }
 
@@ -541,14 +547,14 @@ io.on('connection', function(socket){
       ["A", data[0]],
       function (err, result) {
         if (err){
-          console.log('1270 TBL-STATUS-NOT');
-          socket.emit('1270 TBL-STATUS-NOT');
+          console.log('1252 TBL-STATUS-NOT');
+          socket.emit('1252 TBL-STATUS-NOT');
         }
 
         console.log('Changed ' + result.changedRows + ' rows');
-        console.log('1271 TBL-STATUS-OK');
+        console.log('1253 TBL-STATUS-OK');
 
-        socket.emit('1271 TBL-STATUS-OK');
+        socket.emit('1253 TBL-STATUS-OK');
       }
     );
 
@@ -557,8 +563,8 @@ io.on('connection', function(socket){
     con.query('INSERT INTO orders SET ?', order, function(err,res){
 
       if(err){
-        console.log('353 ORD-CREATE-NOT');
-        socket.emit('353 ORD-CREATE-NOT');
+        console.log('351 ORD-CREATE-NOT');
+        socket.emit('351 ORD-CREATE-NOT');
         return;
       }else{
         console.log('350 ORD-CREATE-OK');
@@ -587,10 +593,10 @@ io.on('connection', function(socket){
           var orders_list = [];
 
           orders_list.push(data[0]);
-          // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+          // Se caso der erro, envio um 451 ORD-CONSULT-NOT
           if(err){
-            console.log('453 ORD-CONSULT-NOT');
-            io.in('orders'+data[0]).emit('453 ORD-CONSULT-NOT');
+            console.log('451 ORD-CONSULT-NOT');
+            io.in('orders'+data[0]).emit('451 ORD-CONSULT-NOT');
             return;
           }
           orders_list.push(rows);
@@ -603,16 +609,16 @@ io.on('connection', function(socket){
           query += 'WHERE o.idTable = '+ data[0] +' ORDER BY o.idOrder';
 
           con.query(query, function(err, products){
-            // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+            // Se caso der erro, envio um 451 ORD-CONSULT-NOT
             if(err){
-              console.log('453 ORD-CONSULT-NOT');
-              io.in('orders'+data[0]).emit('453 ORD-CONSULT-NOT');
+              console.log('451 ORD-CONSULT-NOT');
+              io.in('orders'+data[0]).emit('451 ORD-CONSULT-NOT');
               return;
             }
 
             orders_list.push(products);
-            console.log('453 ORD-CONSULT-OK');
-            io.in('orders'+data[0]).emit('453 ORD-CONSULT-OK', orders_list);
+            console.log('450 ORD-CONSULT-OK');
+            io.in('orders'+data[0]).emit('450 ORD-CONSULT-OK', orders_list);
           
           });
         });
@@ -643,10 +649,10 @@ io.on('connection', function(socket){
             var orders_list = [];
 
             orders_list.push(data[0]);
-            // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+            // Se caso der erro, envio um 451 ORD-CONSULT-NOT
             if(err){
-              console.log('453 ORD-CONSULT-NOT');
-              io.in('orders'+data[0]).emit('453 ORD-CONSULT-NOT');
+              console.log('451 ORD-CONSULT-NOT');
+              io.in('orders'+data[0]).emit('451 ORD-CONSULT-NOT');
               return;
             }
             orders_list.push(rows);
@@ -659,16 +665,16 @@ io.on('connection', function(socket){
             query += 'WHERE o.idTable = '+ data[0] +' ORDER BY o.idOrder';
 
             con.query(query, function(err, products){
-              // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+              // Se caso der erro, envio um 451 ORD-CONSULT-NOT
               if(err){
-                console.log('453 ORD-CONSULT-NOT');
-                io.in('orders'+data[0]).emit('453 ORD-CONSULT-NOT');
+                console.log('451 ORD-CONSULT-NOT');
+                io.in('orders'+data[0]).emit('451 ORD-CONSULT-NOT');
                 return;
               }
 
               orders_list.push(products);
-              console.log('453 ORD-CONSULT-OK');
-              io.in('orders'+data[0]).emit('453 ORD-CONSULT-OK', orders_list);
+              console.log('450 ORD-CONSULT-OK');
+              io.in('orders'+data[0]).emit('450 ORD-CONSULT-OK', orders_list);
             
             });
           });
@@ -712,10 +718,10 @@ io.on('connection', function(socket){
         con.query('SELECT * FROM orders WHERE idTable='+table ,function(err,rows){
           var orders_data = [];
           orders_data.push(table);
-          // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+          // Se caso der erro, envio um 451 ORD-CONSULT-NOT
           if(err){
-            console.log('453 ORD-CONSULT-NOT');
-            socket.emit('453 ORD-CONSULT-NOT');
+            console.log('451 ORD-CONSULT-NOT');
+            socket.emit('451 ORD-CONSULT-NOT');
             return;
           }
           orders_data.push(rows);
@@ -728,16 +734,16 @@ io.on('connection', function(socket){
           query += 'WHERE o.idTable = '+ table +' ORDER BY o.idOrder';
 
           con.query(query, function(err, products){
-            // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+            // Se caso der erro, envio um 451 ORD-CONSULT-NOT
             if(err){
-              console.log('453 ORD-CONSULT-NOT');
-              socket.emit('453 ORD-CONSULT-NOT');
+              console.log('451 ORD-CONSULT-NOT');
+              socket.emit('451 ORD-CONSULT-NOT');
               return;
             }
 
             orders_data.push(products);
-            console.log('453 ORD-CONSULT-OK');
-            io.in('orders'+table).emit('453 ORD-CONSULT-OK', orders_data); 
+            console.log('450 ORD-CONSULT-OK');
+            io.in('orders'+table).emit('450 ORD-CONSULT-OK', orders_data); 
           });
 
         });
@@ -746,10 +752,10 @@ io.on('connection', function(socket){
         con.query('SELECT * FROM orders WHERE idTable='+old_table ,function(err,rows){
           var orders_data = [];
           orders_data.push(old_table);
-          // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+          // Se caso der erro, envio um 451 ORD-CONSULT-NOT
           if(err){
-            console.log('453 ORD-CONSULT-NOT');
-            socket.emit('453 ORD-CONSULT-NOT');
+            console.log('451 ORD-CONSULT-NOT');
+            socket.emit('451 ORD-CONSULT-NOT');
             return;
           }
           orders_data.push(rows);
@@ -762,16 +768,16 @@ io.on('connection', function(socket){
           query += 'WHERE o.idTable = '+ old_table +' ORDER BY o.idOrder';
 
           con.query(query, function(err, products){
-            // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+            // Se caso der erro, envio um 451 ORD-CONSULT-NOT
             if(err){
-              console.log('453 ORD-CONSULT-NOT');
-              socket.emit('453 ORD-CONSULT-NOT');
+              console.log('451 ORD-CONSULT-NOT');
+              socket.emit('451 ORD-CONSULT-NOT');
               return;
             }
 
             orders_data.push(products);
-            console.log('453 ORD-CONSULT-OK');
-            io.in('orders'+old_table).emit('453 ORD-CONSULT-OK', orders_data);
+            console.log('450 ORD-CONSULT-OK');
+            io.in('orders'+old_table).emit('450 ORD-CONSULT-OK', orders_data);
           });
 
         });
@@ -808,15 +814,15 @@ io.on('connection', function(socket){
 
             var orders_list = [];
             orders_list.push(idTable);
-            // Se caso der erro, envio um 453 ORD-CONSULT-NOT
+            // Se caso der erro, envio um 451 ORD-CONSULT-NOT
             if(err){
-              console.log('453 ORD-CONSULT-NOT');
-              io.in('orders'+idTable).emit('453 ORD-CONSULT-NOT');
+              console.log('451 ORD-CONSULT-NOT');
+              io.in('orders'+idTable).emit('451 ORD-CONSULT-NOT');
             }
 
             orders_list.push(rows);
-            console.log('453 ORD-CONSULT-OK');
-            io.in('orders'+idTable).emit('453 ORD-CONSULT-OK', orders_list);
+            console.log('450 ORD-CONSULT-OK');
+            io.in('orders'+idTable).emit('450 ORD-CONSULT-OK', orders_list);
           });
 
           // Se a quantidade de pedidos for 0, eu fecho a mesa
@@ -828,15 +834,15 @@ io.on('connection', function(socket){
                 ["F", idTable],
                 function (err, result) {
                   if (err){
-                    console.log('1270 TBL-STATUS-NOT');
-                    socket.emit('1270 TBL-STATUS-NOT');
+                    console.log('1252 TBL-STATUS-NOT');
+                    socket.emit('1252 TBL-STATUS-NOT');
                     return;
                   }
 
                   console.log('Changed ' + result.changedRows + ' rows');
-                  console.log('1271 TBL-STATUS-OK');
+                  console.log('1253 TBL-STATUS-OK');
 
-                  socket.emit('1271 TBL-STATUS-OK');
+                  socket.emit('1253 TBL-STATUS-OK');
 
                   // Mando a listagem de mesas para todos que estão na listagem de mesas
                   updateListTables();
